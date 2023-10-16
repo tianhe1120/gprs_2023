@@ -27,16 +27,18 @@ $ source ./venv/bin/activate
 3. Install this package
 
 ```shell
+$ pip install -r requirements.txt
+$ pip install -r requirements.readthedocs.txt
 $ pip install -e .
 ```
 
-- Twelve commands in gprs:
+- Eighteen commands in gprs:
 
-1. `geneatlas-filter-data`
+1. `prepare-sumstat`
 
-2. `gwas-filter-data`
+2. `generate-plink-bfiles`
 
-3. `generate-plink-bfiles`
+3. `generate-plink-bfiles-w-individual-info`
 
 4. `clump`
 
@@ -44,18 +46,26 @@ $ pip install -e .
 
 6. `build-prs`
 
-7. `combine-prs`
+7. `prs-stat`
 
 8. `prs-statistics`
 
-9. `combine-prs-stat`
+9. `multiple-prs`
 
-10. `transfer_atcg` (optional)
+10. `combine-prs`
 
-11. `sub-setpop` (optional)
+11. `combine-stat`
 
-12. `generate_plink_bfiles_w_individual_info` (optional)
+12. `ldpred2-train`
 
-13. `random_draw_samples_from_fam` (optional)
+13. `create-new-marker`
 
-14. `subset_vcf_w_random_sample` (optional)
+14. `filtered-sscore-w-indv`
+
+15. `transfer_atcg` (optional)
+
+16. `subset-pop` (optional)
+
+17. `subset-vcf-w-random-sample` (optional)
+
+18. `random_draw_samples_from_fam` (optional)
