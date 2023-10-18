@@ -65,20 +65,6 @@ $ gprs geneatlas-filter-data --ref [str] --data_dir [str] --result_dir [str] --s
 $ gprs geneatlas-filter-data --data_dir data/2014_GWAS_Height --result_dir [str] --snp_id_header MarkerName --allele_header Allele1 --beta_header b --se_header SE --pvalue_header p --pvalue 1 --output_name 2014height
 ```
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
-
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-    
-    geneatlas.filter_data( snp_id_header='MarkerName',
-                            allele_header='Allele1',
-                            beta_header='b',
-                            se_header ='SE',
-                            pvalue_header='p',
-                            output_name='2014height')   
-```
 
 ## After preparing the data-set three files obtained
 
@@ -120,15 +106,7 @@ $ gprs generate-plink-bfiles --ref [str] --snplist_name [str] --output_name [str
 $ gprs generate-plink-bfiles --ref 1000genomes/hg19 --snplist_name 2014height --symbol . --output_name 2014height
 ```
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
 
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-
-    geneatlas.generate_plink_bfiles(snplist_name='2014height', output_name='2014height',extra_commands="--vcf-half-call r" ,symbol='.genotypes')
-```
 - chr1-chr22 bfiles obtained
 
 1. `result/plink/bfiles/chr(1-22)_2014height.bed`
@@ -151,17 +129,6 @@ $ gprs clump --plink_bfile_name [str] --output_name [str] --clump_kb [int] --clu
 $ gprs clump --data_dir data/2014_GWAS_Height --clump_kb 250 --clump_p1 0.02 --clump_p2 0.02 --clump_r2 0.1 --clump_field Pvalue --clump_snp_field 2014height --plink_bfile_name 2014height --qc_file_name 2014height --output_name 2014height
 ```
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
-
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-    
-    geneatlas.clump(output_name='2014height',plink_bfile_name='2014height',
-                    qc_file_name='2014height',clump_kb='250',
-                    clump_p1='0.02',clump_p2='0.02', clump_r2='0.02')
-```
 
 - chr1-chr22 clumped files obtained
 
@@ -186,20 +153,6 @@ $ gprs select-clump-snps --qc_file_name [str] --clump_file_name [str] --output_n
 $ gprs select-clump-snps --qc_file_name 2014height --clump_file_name 2014height --clump_kb 250 --clump_p1 0.02 --clump_r2 0.1 --clumpfolder_name 2014height --output_name 2014height
 ```
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
-
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-    
-    geneatlas.select_clump_snps(output_name='2014height',
-                                clump_file_name='2014height',
-                                qc_file_name='2014height',
-                                clump_kb='250',
-                                clump_p1='0.02',
-                                clump_r2='0.5',clumpfolder_name='2014height')
-```
 
 - new snps list obtained
 
@@ -225,17 +178,6 @@ $ gprs build-prs --vcf_input [str] --output_name [str] --qc_clump_snplist_folder
 $ gprs build-prs --vcf_input 1000genomes/hg19 --symbol . --qc_file_name 2014height --columns 1 2 3 --memory 1000 --clump_kb 250 --clump_p1 0.02 --clump_r2 0.1 --output_name 2014height 
 ```
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
-
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-    
-    geneatlas.build_prs( vcf_input= 'home/1000genomes/hg19',
-                         output_name ='2014height', memory='1000',clump_kb='250',
-                         clump_p1='0.02', clump_r2='0.02', qc_clump_snplist_foldername='2014height')
-```
 
 - chr1-chr22 sscore files obtained 
 
@@ -260,16 +202,7 @@ $ gprs build-prs --vcf_input [str] --symbol [str/int] --qc_file_name [str] --col
 $ gprs build-prs --vcf_input 1000genomes/hg19 --symbol . --qc_file_name 2014height --columns 1 2 3 --memory 1000 --clump_kb 250 --clump_p1 0.02 --clump_r2 0.1 --output_name 2014height 
 ```
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
 
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-    
-    geneatlas.combine_prs(filename="2014height",
-                          clump_r2="0.5",clump_kb="250",clump_p1="0.02")
-```
 - one combined sscore files obtained 
 
 `result/plink/prs/*.sscore`
