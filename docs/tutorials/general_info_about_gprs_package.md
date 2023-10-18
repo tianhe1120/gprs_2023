@@ -46,9 +46,9 @@ $ pip install -e .
 
 6. `build-prs`
 
-7. `prs-stat`
+7. `beta-list`
 
-8. `prs-statistics`
+8. `prs-stat`
 
 9. `multiple-prs`
 
