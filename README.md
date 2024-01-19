@@ -19,6 +19,7 @@ It is designed to deal with GWAS summary statistics in different formats includi
 ## Environment setup
 
 1. Setup virtualenv
+   The second "venv" is the name of your virtual environment. "venv" should be used to comform the following steps.
 
 ```shell
 $ python3 -m venv venv
@@ -31,16 +32,14 @@ $ source ./venv/bin/activate
 ```
 
 3. Install this package
+   "-e" means to install the pipeline in a modifiable mode.
 
 ```shell
 $ pip install -r requirements.txt
+$ pip install -r requirements.readthedocs.txt
 $ pip install -e .
 ```
 
-If you are USC users
-```shell
-$ pip install . --user 
-```
 
 ## Additional requirements
 Install both version 1.9 and 2.0 plink.  https://zzz.bwh.harvard.edu/plink/download.shtml
@@ -51,14 +50,12 @@ Please load the plink modules by using:
 $ module load plink2
 ```
 ```shell
-$ module load gcc/11.2.0
-$ module load plink/1.9-beta6.24
+$ module load plink/1.9
 ```
 
 ## Prepare dataset
-Download GWAS summary statistics from
-[GWAS catalog](https://www.ebi.ac.uk/gwas/) and [GeneATLAS](http://geneatlas.roslin.ed.ac.uk/). 
-(The GWAS summary statistics should have contains the information: SNPID, ALLELE, BETA, P-value, and StdErr)
+Download GWAS summary statistics from available resources.
+(The GWAS summary statistics should contain the information: SNPID, ALLELE, BETA, P-value, and StdErr)
 
 
 ## Usage guidance
@@ -69,84 +66,60 @@ If your GWAS summary statistics data are zipped, please unzip your .gz file firs
 ### Commands
 
 ```shell
-$ gprs geneatlas-filter-data --ref [str] --data_dir [str] --result_dir [str] --snp_id_header [str] --allele_header [str] --beta_header [str] --se_header [str] --pvalue_header [str] --pvalue [float/scientific notation] --output_name [str]  
-$ gprs gwas-filter-data --ref [str] --data_dir [str] --result_dir [str] --snp_id_header [str] --allele_header  [str] --beta_header [str] --se_header [str] --pvalue_header [str] --pvalue [float/scientific notation] --output_name [str]  
-$ gprs generate-plink-bfiles --ref [str] --snplist_name [str] --output_name [str] --symbol [str] --extra_commands [str] 
-$ gprs clump --plink_bfile_name [str] --output_name [str] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_p2 [float/scientific notation] --clump_r2 [float] --clump_field [str] --qc_file_name [str] --clump_snp_field [str]   
-$ gprs select-clump-snps --qc_file_name [str] --clump_file_name [str] --output_name [output name] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float] --clumpfolder_name [str]
-$ gprs build-prs --vcf_input [str] --output_name [str] --qc_clump_snplist_foldername [str] --memory [int] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float] --symbol [str/int] --columns [int] --plink_modifier [str]  
-$ gprs combine-prs --filename [str] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float]
-$ gprs prs-statistics --score_file [str] --pheno_file [str] --output_name [str] --data_set_name [str] --prs_stats_R [str] --r_command [str] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float]
-$ gprs combine-prs-stat --data_set_name [str] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float]
+$ gprs prepare-sumstat --file / --dir --sumstat [str] --comment [str] --symbol [str] --out [str] --snpid [str] --chr [str] --pos [str] --ea [str] --nea [str] --beta [str] --se [str] --pval [str] --neff [str] --total [int] --case_control [int]
+$ gprs generate-plink-bfiles --ref [str] --sumstat [str] --out [str] --symbol [str] --extra_commands [str] --merge / --no-merge
+$ gprs clump --plink_bfile_name [str] --output_name [str] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_p2 [float/scientific notation] --clump_r2 [float] --clump_field [str] --sumstat [str] --clump_snp_field [str]   
+$ gprs select-clump-snps --sumstat [str] --clump_file_name [str] --output_name [str] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float] --clumpfolder_name [str]
+$ gprs beta-list --beta_dirs [str] --out [str]
+$ gprs multiple-prs --vcf_dir [str] --beta_dir_list [str] --slurm_name [str] --slurm_account [str] --slurm_time [str] --memory [int] --symbol [str] --columns [int] --plink_modifier [str] --combine [str] --out [str]
+$ gprs build-prs --vcf_dir [str] --model [str] --beta_dir_list [str] --memory [int] --out [str] --symbol [str/int] --columns [int] --plink_modifier [str] --combine [str]  
+$ gprs prs-stat --score [str] --pheno [str] --data [str] --model [str] --r [str] --binary / --quantitative --pop_prev [str] --plotroc / --no_plot
+$ gprs combine_stat --data [str]
 
 ```
 
-### optional function
-If alleles are a, t, c, g instead of capital A, T, C, G it might affect the further analysis. 
-```shell
-$ gprs transfer_atcg --qc_file_name [str]
-$ gprs subset_pop --input_data [str] --column_name [str] --pop_info [str] --output_name [str]
-$ gprs generate-plink-bfiles-w-individual-info --popfile_name [str] --bfile_name [str] --output_name [str]
-$ gprs subset-vcf-w-random-sample --fam_dir [str] --fam_filename [str] --samplesize [int] --vcf_input [str] --symbol [str/int]
-$ gprs random_draw_samples_from_fam --fam_dir [str] --fam_filename [str] --samplesize [int] --tag [str]
-```
 
 
 ## Commands in gprs package:
 
-:octocat: Thirteen commands in gprs:
+:octocat: Nine commands in gprs:
 
-1. `geneatlas-filter-data`
+1. `prepare-sumstat`
 
-2. `gwas-filter-data`
+2. `generate-plink-bfiles`
 
-3. `generate-plink-bfiles`
+3. `clump`
 
-4. `clump`
+4. `select-clump-snps`
 
-5. `select-clump-snps`  
+5. `beta-list`
 
-6. `build-prs`
+6. `multiple-prs`
 
-7. `combine-prs`
+7. `build-prs`
 
-8. `prs-statistics`
+8. `prs-stats`
 
-9. `combine-prs-stat`
+9. `combine-stat`
 
-10. `subset_pop` (optional)
-
-11. `generate_plink_bfiles_w_individual_info` (optional)
-
-12. `transfer_atcg` (optional)
-
-13. `subset_vcf_w_random_sample` (optional)
 
 ### Result folder
 In the first step, you need to indicate the path to creating the result folder.
 Five folders will automatically generate under the result folder by script. 
 
-- qc folder: `./result/qc/`
-- snplists folder : `./result/snplists/`
+- qc folder: `./result/sumstat/`
 - bfile folder: `./result/plink/bfiles`
 - clump folder: `./result/plink/clump`
-- qc_and_clump_snpslist folder: `./result/plink/qc_and_clump_snpslist`
 - prs folder: `./result/plink/prs`
-- pop folder: `./result/pop/`
-- random_draw_sample folder: `./result/random_draw_sample/`
 
-:heavy_exclamation_mark: Users have to indicate reference and result directories every time when using the command interface.
-
-:heavy_exclamation_mark: Users have to provide output_name every time when they execute the commands. The output_name should be the same in every execution.
 
 ### Output file format
-This package will generate output files below:
-- `*.QC.csv` 
+This package will generate output files below: 
 - `*.csv` 
 - `*.bim`
 - `*.bed`
 - `*.fam`
-- `*.clump`
+- `*.clumped`
 - `*.qc_clump_snpslist.csv`
 - `*.sscore`
 - `*_stat.txt`
@@ -163,61 +136,39 @@ Thus, it is better use the same output name to generate all files.
 - `--plink_bfile_name`
 
 
-### `gprs geneatlas-filter-data`
 
-Filter GeneAtlas csv file by P-value and unify the data format as following order:
-SNPID, ALLELE,  BETA,  StdErr, Pvalue
+### `gprs prepare-sumstat`
 
-#### Options:
-```
-  --ref                     path to population reference panel  [required]
-  --data_dir                The directory of GeneAtlas csv files (all 1-24 chr) [required]
-  --result_dir              path to output folder; default:[./result]
-  --snp_id_header           SNP ID column name in GeneAtlas original file  [required]
-  --allele_header           ALLELE column name in GeneAtlas original file  [required]
-  --beta_header             BETA column name in GeneAtlas original file [required]
-  --se_header               StdErr column name in GeneAtlas original file  [required]
-  --pvalue_header           P-value column name in GeneAtlas original file  [required]
-  --output_name             output name; default: "geneatlas"; the output file name is [chrnb]_[output_name].csv and [chrnb]_[output_name].QC.csv
-  --pvalue                  P-value threshold
-  --help                    Show this message and exit.
-````
-
-#### Result:
-
-This option generates two types of output in `qc` and `snplists` folders:
-
-- `*.QC.csv` (QC files )
-- `*.csv` (snplist)
-
- 
-### `gprs gwas-filter-data`
-
-Filter GeneAtlas csv file by P-value and unify the data format as following order:
+Parse the summary statistics and unify the data format as following order:
 SNPID, ALLELE,  BETA,  StdErr, Pvalue
 
 #### Options:
 
 ````
-  --ref                      path to population reference panel  [required]
-  --data_dir                 path to GWAS catalog summary statistic csv file (all 1-24 chr)  [required]
-  --result_dir               path to output folder; default:[./result]
-  --snp_id_header            SNP ID column name in GWAS catalog original file  [required]
-  --allele_header            ALLELE column name in GWAS catalog original file  [required]
-  --beta_header              BETA column name in GWAS catalog original file  [required]
-  --se_header                StdErr column name in GWAS catalog original file  [required]
-  --pvalue_header            P-value column name in GWAS catalog original file  [required]
-  --output_name              output name; default: "gwas"; the output file named is [chrnb]_[output_name].csv and [chrnb]_[output_name].QC.csv
-  --pvalue                   P-value threshold for filtering SNPs
+  --file / --dir             Whether summary statistics is given as one file, or as a directory with 22 chromosome files with --sumstat, default=True
+  --sumstat                  Path to one summary statistic file(default), or a directory with 22 chromosome files (use with --dir flag in this case)  [required]
+  --comment                  In summary statistic file(s), indicate the text for lines that should be skipped (for example, "#" for snptest results)
+  --symbol                   When giving summary statistics DIRECTORY, indicate the symbol or text after chromosome number in each file, default = "." 
+  --out                      Output prefix for 22 processed summary statistics, deposited in sumstat folder  [required]
+  --snpid                    Column header name for SNP ID in sumstat  [required]
+  --chr                      Column header name for CHROMOSOME in sumstat  [required]
+  --pos                      Column header name for POSITION in sumstat  [required]
+  --ea                       Column header name for EFFECT ALLELE in sumstat  [required]
+  --nea                      Column header name for NON-EFFECT ALLELE in sumstat  [required]
+  --beta                     Column header name for BETA(EFFECT SIZE) for EFFECT ALLELE in sumstat  [required]
+  --se                       Column header name for STANDARD ERROR in sumstat  [required]
+  --pval                     Column header name for P-VALUE in sumstat  [required]
+  --neff                     Column header name for EFFECTIVE SAMPLE SIZE in sumstat  [required]
+  --total                    Total sample size for quantitative trait; DO NOT use with --Neff or --case_control  [required]
+  --case_control             Case and control sample size for binary trait, separated by a space (order does not matter); DO NOT use with --Neff or --total  [required]
   --help                     Show this message and exit.
 ````
 
 #### Result:
 
-This option generates two types of output in `qc` and `snplists` folders:
+This option generates csv files for 22 chromosomes in `sumstat` folder:
 
-- `*.QC.csv` (QC files )
-- `*.csv` (snplist)
+- `your_prefix_chrnb.csv` 
 
 
 ### `gprs generate-plink-bfiles`
