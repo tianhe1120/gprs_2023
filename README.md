@@ -20,6 +20,7 @@ It is designed to deal with GWAS summary statistics in different formats includi
 
 1. Setup virtualenv
 
+
   The second "venv" is the name of your virtual environment. "venv" should be used to comform the following steps.
 
 ```shell
@@ -33,6 +34,7 @@ $ source ./venv/bin/activate
 ```
 
 3. Install this package
+
 
   "-e" means to install the pipeline in a modifiable mode.
 
@@ -123,7 +125,7 @@ This package will generate output files below:
 - `*.bed`
 - `*.fam`
 - `*.clumped`
-- `*.qc_clump_snpslist.csv`
+- `*.clumped_snpslist.csv`
 - `*.sscore`
 - `*_stat.txt`
 - `*_combined_stat.txt`
@@ -171,7 +173,7 @@ SNPID, ALLELE,  BETA,  StdErr, Pvalue
 
 This option generates csv files for 22 chromosomes in `sumstat` folder:
 
-- `your_prefix_chrnb.csv` 
+- `[your_prefix]_[chrnb].csv` 
 
 
 ### `gprs generate-plink-bfiles`
@@ -245,44 +247,52 @@ This option will generate one file in `clump` folder:
 
 #### Result:
 This option will generate files in `../result/plink/clump` folder:
-- `your_prefix_clumped_snpslist.csv`
+- `[your_prefix]_clumped_snpslist.csv`
 
 also makes directories under `../result/plink/ct/` with name of the models
 
 Under each model directory, files are generated for each chromosome:
-- `chrnb_your_prefix_model_parameters.weight`
+- `[chrnb]_[your_prefix]_[model_parameters].weight`
 
 
 ### `gprs beta-list`
 
 #### Options:
 ````
-  --
-  --
-  --
-  --
+  --beta_dirs                    list of beta directories to compute PRS with. If more than one, separate by a space and enclose with ' ' [required]
+  --out                          prefix for output .list file [required]
+  --help                         Show this message and exit.
 ````
 
 #### Result:
 This option will generate the beta list required for `multiple-prs` function under `./result/prs`:
-- `your_prefix.list`
+- `[your_prefix].list`
 
 
 ### `gprs multiple-prs`
 
 #### Options:
 ````
-  --
-  --
-  --
-  --
+  --vcf_dir                       path to directories containing vcf files [required]
+  --beta_dir_list                 dictionary = of beta directories created from beta-list function; in ./result/prs by default
+  --slurm_name                    slurm job name [required]
+  --slurm_account                 slurm job account; default = "chia657_28"
+  --slurm_time                    slurm job time; default = "12:00:00"
+  --memory                        slurm job memory in GB; default = "10"
+  --symbol                        symbol or text after chrnb in vcf files; default = "."; i.e. ALL.chr8.vcf.gz, you can put "." or ".vcf.gz"
+  --columns                       a column index indicate the [SNPID] [ALLELE] [BETA] position; column nb starts from 1; default="1 4 6"
+  --plink_modifier                plink2 modifier for score function; default = "no-mean-imputation" "cols=nallele, dosagesum, scoresums"
+  --combine                       whether to combine scores per chromosomes to generate a final genome-wide PRS (T/F); default="T"
+  --out                           directory name to output PRS [required]
+  --help                         Show this message and exit.
 ````
 
 #### Result:
 This option will generate a bash script to submit organizing all the models:
 - `build-prs.sh`
 The job will be automatically submitted. User could use `$ myqueue` to monitor the progress.
-`slurm.slurm_name.jobID.out` and `slurm.slurm_name.jobID.err` will be generated to root directory.
+`slurm.[slurm_name].[jobID].out` and `slurm.[slurm_name].[jobID].err` will be generated to root directory.
+Output see `gprs build-prs` below.
 
 
 ### `gprs build-prs`
@@ -290,25 +300,22 @@ This option encodes plink2.0 function
 ```
 plink2 --vcf [vcf input] dosage=DS --score [snplists afte clumped and qc]  --out 
 ```
-The clumped qc snpslists and prs_output_dir will automatically be filled in the script.
-Users have to indicate the options below.
 
 #### Options:
 ````
+  --vcf_dir                      path to vcf files  [required]
+  --model                        model to use to generate PRS
+  --beta_dir_list                dictionary of beta directories created from beta-list function, used to look up the path for specified PRS model
+  --memory                       number of memory use
+  --out                          directory name to output PRS
   --symbol                       indicate the symbol or text after chrnb in vcf file, default = "." ; i.e. ALL.chr8.vcf.gz, you can put "." or ".vcf.gz"
-  --vcf_input                    path to vcf files  [required]
-  --qc_clump_snplist_foldername  the folder name of .qc_clump_snpslist.csv file. The folder name should be 
-                                 the same as the output name in select_clump_snps step
   --columns                      a column index indicate the [SNPID] [ALLELE] [BETA] position; column nb starts from 1
   --plink_modifier               no-mean-imputation as default in here, get more info by searching plink2.0 modifier
-  --output_name                  it is better if the output_name remain the same. output: [chrnb]_[output_name].sscore
-  --clump_kb                     distance(kb) parameter for clumping [required]
-  --clump_p1                     first set of P-value for clumping [required]
-  --clump_r2                     r2 value for clumping, default = 0.1
+  --combine                      whether to combine score per chromosomes to generate a final genome-wide PTS (T/F); default = "T"
   --help                         Show this message and exit.
 ````
 #### Result:
-This option will generate `.sscore` files in `prs` folder:
+This option will generate `.sscore` files in `./result/prs/[output_directory_name]` folder:
 - `*.sscore`
 
 
@@ -316,29 +323,26 @@ This option will generate `.sscore` files in `prs` folder:
 
 ### `gprs prs-stats`
 
-After obtained combined sscore file, `prs-statistics` calculate BETA, AIC, AUC, PseudoR2 and OR ratio 
+After obtained combined sscore file, `prs-stats` calculate BETA, AIC, AUC, PseudoR2 and OR ratio 
 
 #### Options:
 ````
-  --score_file             the absolute path to combined .sscore file [required]
-  --pheno_file             the absolute path to pheno file  [required]
-  --output_name            the output name  [required]
-  --data_set_name          the name of the data-set i.e. gout_2019_GCST008970
-                           [required]
-  --clump_kb               distance(kb) parameter for clumping [required]
-  --clump_p1               first set of P-value for clumping [required]
-  --clump_r2               r2 value for clumping, default = 0.1
-  --prs_stats_R            the absolute path to "prs_stats.R"  [required]
-  --r_command              use "which R" in linux, and copy the path after
-                           --r_command  [required]
+  --score                  the absolute path to combined .sscore file [required]
+  --pheno                  the absolute path to pheno file  [required]
+  --data                   output directory name to save the statistics. Recommended to keep it the same for one dataset for combine-stat function  [required]
+  --model                  model name for output. Recommended to include parameters for the model used to build PRS  [required]
+  --r                      use "which R" in linux
+  --binary/--quantitative  whether phenotype is binary or quantitative; default: --quantitative
+  --pop_prev               population prevalence for binary trait. Required for binary trait but leave it blank or enter NA for quantitative trait
+  --plotroc/--no_plot      whether to plot ROC curve for binary trait. Leave it blank or --no_plot for quantitative trait
   --help                   Show this message and exit.
 ````
 #### Result:
-This option will generate .txt file in `stat` folder:
+This option will generate .txt file in `./result/stat` folder:
 - `*_stat.txt`
 
 
-### `gprs combine-prs-stat`
+### `gprs combine-stat`
 
 If you have more than one trained PRS model, `combine-prs-stat` function is designed to combine statistics results.
 For instance: the first PRS model was filtered with P < 0.05, the second PRS model was filtered with P < 0.0005. You will have DATA_0.05_stat.txt/DATA_0.0005_stat.txt
@@ -346,10 +350,7 @@ Combining two statistic tables allows users easy to compare between PRS models
 
 #### Options:
 ````
-  --data_set_name        the name of the data-set i.e. gout_2019_GCST008970 [required]
-  --clump_kb             distance(kb) parameter for clumping [required]
-  --clump_p1             first set of P-value for clumping [required]
-  --clump_r2             r2 value for clumping, default = 0.1
+  --data                 directory in ./result/stat to combine the statistics. [required]
   --help                 Show this message and exit.
 ````
 #### Result:
