@@ -13,32 +13,31 @@ Download the summary statistics files. Please unzip your .gz file first.
 
 ### Function: `gprs geneatlas-filter-data`
 
-Filter GeneAtlas csv file by P-value and unify the data format as following order:
-SNPID, ALLELE,  BETA,  StdErr, Pvalue
+Filter summary statistics and unify the data format as follows:
+SNPID, CHR, POS, Effect_Allele, NonEffect_Allele, Beta, SE, Pvalue, N_eff
 
 ### How to use it?
 
 Shell:
 
 ```shell
-$ gprs geneatlas-filter-data --ref [str] --data_dir [str] --result_dir [str] --snp_id_header [str] --allele_header [str] --beta_header [str] --se_header [str] --pvalue_header [str] --pvalue [float/scientific notation] --output_name [str]  
-$ gprs gwas-filter-data --ref [str] --data_dir [str] --result_dir [str] --snp_id_header [str] --allele_header  [str] --beta_header [str] --se_header [str] --pvalue_header [str] --pvalue [float/scientific notation] --output_name [str]  
+$ gprs prepare-sumstat --file / --dir --sumstat [str] --comment [str] --symbol [str] --out [str] --snpid [str] --chr [str] --pos [str] --ea [str] --nea [str] --beta [str] --se [str] --pval [str] --neff [str] --total [int] --case_control [int] 
 ```
 
 Example input:
 
 ```shell
-
+$ gprs prepare-sumstat --file --sumstat docs/Height/sumstats/2019_BBJ_Height_autosomes_BOLT_liftover_to_hg38.txt --out JA_height --snpid Variants --chr CHR --pos POS --ea REF --nea ALT --beta BETA --se SE --pval P_INF --total 5022
 ```
 
 ### output files
-- `*.QC.csv` (QC files )
-- `*.csv` (snplist)
+- `[your_prefix]_[chrnb].csv
+- ie. JA_height_chr7.csv
 
 
 
 ## Necessary quality control
-
+ - SNPID: 
 
 
 
