@@ -38,34 +38,19 @@ $ pip install -e .
 
 2. `generate-plink-bfiles`
 
-3. `generate-plink-bfiles-w-individual-info`
+3. `clump`
 
-4. `clump`
-
-5. `select-clump-snps`  
-
-6. `build-prs`
-
-7. `beta-list`
+4. `select-clump-snps`
+   
+5. `beta-list`
+   
+6. `multiple-prs`
+   
+7. `build-prs`
 
 8. `prs-stat`
 
-9. `multiple-prs`
+9. `combine-stat`
 
-10. `combine-prs`
+10. `ldpred2-train`
 
-11. `combine-stat`
-
-12. `ldpred2-train`
-
-13. `create-new-marker`
-
-14. `filtered-sscore-w-indv`
-
-15. `transfer_atcg` (optional)
-
-16. `subset-pop` (optional)
-
-17. `subset-vcf-w-random-sample` (optional)
-
-18. `random_draw_samples_from_fam` (optional)
