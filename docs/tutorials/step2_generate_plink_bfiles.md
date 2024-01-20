@@ -14,19 +14,13 @@ plink --vcf [ref] --extract [snplists after qc] --make-bed --out [bfile folder/o
 Shell:
 
 ```shell
-$ gprs generate-plink-bfiles --ref [str] --snplist_name [str] --symbol [str] --output_name [str]
+$ gprs generate-plink-bfiles --ref [str] --sumstat [str] --out [str] --symbol [str] --extra_commands [str] --merge / --no-merge
 ````
 
 Python:
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
-
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-
-    geneatlas.generate_plink_bfiles(snplist_name='2014height_MEC', output_name='2014height_hg38',extra_commands="--vcf-half-call r" ,symbol='_GRCh38.genotypes')
+```shell
+$ gprs generate-plink-bfiles --ref docs/Height/data/vcf --sumstat JA_height --out JA_height_all --no-merge
 ```
 
 ## output files
