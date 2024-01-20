@@ -19,7 +19,8 @@ It is designed to deal with GWAS summary statistics in different formats includi
 ## Environment setup
 
 1. Setup virtualenv
-   The second "venv" is the name of your virtual environment. "venv" should be used to comform the following steps.
+
+The second "venv" is the name of your virtual environment. "venv" should be used to comform the following steps.
 
 ```shell
 $ python3 -m venv venv
@@ -32,7 +33,8 @@ $ source ./venv/bin/activate
 ```
 
 3. Install this package
-   "-e" means to install the pipeline in a modifiable mode.
+
+"-e" means to install the pipeline in a modifiable mode.
 
 ```shell
 $ pip install -r requirements.txt
@@ -177,15 +179,15 @@ This option encodes plink1.9 make-bed function
 plink --vcf [ref] --extract [snplists after qc] --make-bed --out [bfile folder/output_name]
 ```
 snplists and bfiles folders will automatically be filled in the script.
-Users have to indicate ref and output_name only.
+Users have to indicate ref and output name only.
 
 #### Options:
 ````
-  --ref                path to population reference panel  [required]
-  --output_name        output name
+  --ref                directory containing chromosome-separated vcf files for LD reference panel  [required]
+  --sumstat            prefix to summary statistics files outputted from perepare_sumstat function
+  --out                prefix for output plink files
   --symbol             indicate the symbol or text after chrnb in vcf file, default = "." ; i.e. ALL.chr8.vcf.gz, you can put "." or ".vcf.gz" 
-  --snplist_name       snplist_name is [output_name] from [chrnb]_[output_name].csv [required]
-  --extra_commands     put your extract function if needed, otherwise no need to specify this argument,
+  --extra_commands     argument to add for plink 1 make-bed function
   --help               Show this message and exit.
 ````
 
@@ -207,14 +209,14 @@ Users have to indicate the options below.
 
 #### Options:
  ````
+  --plink_bfile_name         plink_bfile_name is [output_name] from [chrnb]_[output_name].bim/bed/fam [required]
+  --output_name              it is better if the output_name remain the same. The clump output: 
   --clump_kb                 distance(kb) parameter for clumping [required]
   --clump_p1                 first set of P-value for clumping [required]
   --clump_p2                 should equals to p1 reduce the snps [required]
-  --qc_file_name             qc_file_name is [output_name] from [chrnb]_[output_name].QC.csv [required]
-  --plink_bfile_name         plink_bfile_name is [output_name] from [chrnb]_[output_name].bim/bed/fam [required]
-  --output_name              it is better if the output_name remain the same. The clump output: [chrnb]_[output_name]_clumped_snplist.csv [required]
   --clump_r2                 r2 value for clumping, default = 0.1
   --clump_field              P-value column name, default = Pvalue
+  --sumstat                  [output_name] from [output_name]_[chrnb].csv in sumstat directory [required]
   --clump_snp_field          SNP ID column name, default = SNPID
   --help                     Show this message and exit.
 ````
@@ -223,27 +225,31 @@ Users have to indicate the options below.
 
 This option will generate one file in `clump` folder:
 
-- `*.clump`
+- `*.clumped`
 
 
 ### `gprs select-clump-snps`
 
 #### Options:
 ```` 
-  --qc_dir                       path to qc folder, default: "./result/qc", the qc files were generated from gwas_filter_data or geneatlas_filter_data options
-  --clump_output_dir             path to clump output folder, default: "./result/plink/clump"
-  --qc_clump_snplists_dir        path to snpslist (after qc and clumping), default:"./result/plink/qc_and_clump_snpslist"
-  --clump_file_name              clump_file_name is [output_name] from [chrnb]_[output_name].clump [required]
+  --sumstat                      [output_name] from [output_name]_[chrnb].csv in sumstat directory
+  --clump_file_name              clump_file_name is [output_name] from [chrnb]_[output_name].clump
   --output_name                  it is better if the output_name remain the same. output: [chrnb]_[output_name]_clumped_snplist.csv [required]
   --clump_kb                     distance(kb) parameter for clumping [required]
   --clump_p1                     first set of P-value for clumping [required]
   --clump_r2                     r2 value for clumping, default = 0.1
+  --clumpfolder_name             folder name for .clumped files [required]
   --help                         Show this message and exit.
 ````
 
 #### Result:
-This option will generate one file in `qc_and_clump_snpslist` folder:
-- `*.qc_clump_snpslist.csv`
+This option will generate files in `../result/plink/clump` folder:
+- `your_prefix_clumped_snpslist.csv`
+
+also makes directories under `../result/plink/ct/` with name of the models
+
+Under each model directory, files are generated for each chromosome:
+- `chrnb_your_prefix_model_parameters.weight`
 
 
 ### `gprs build-prs`
