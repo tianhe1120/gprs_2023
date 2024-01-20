@@ -1,39 +1,15 @@
-# Get started: understanding the data format
+# Get started: prepare the summary statistics data
 
 
-## GWAS template
-
-|Chr|Pos|RSID|Allele1|Allele2|Freq1|Effect|StdErr|P-value|n_total_sum|
-|---|---|---|---|---|---|---|---|---|---|
-|1 |10539 |rs537182016 |a |c |0.0013 |-5.1213 |20.0173 |0.7981 |7043|
-|1 |11008 |rs575272151 |c |g |0.9215 |0.1766 |0.2610 |0.4985 |7042.99|
-|1 |11012 |rs544419019 |c |g |0.9215 |0.1766 |0.2610 |0.4985 |7042.99| 
-|1 |14674 |rs561913721 |a |g |0.0032 |0.8040 |0.8364 |0.3364 |7043|
 
 
-## GeneAtlas template
-
-|SNP |ALLELE |NBETA-selfReported_n_1526 |NSE-selfReported_n_1526 |PV-selfReported_n_1526
-|---|---|---|---|---|
-|rs1110052 |T |-0.00032386 |0.000269 |0.2286|
-|rs112164716 |T |6.5121e-05 |0.001126 |0.95388|
-|rs11240779|A |-0.00022416 |0.00028937 |0.43855|
-|rs11260596 |C |0.00025168 |0.00024248 |0.29931|
-
-
-## How to choose model template?
-
-|-|chr info in the file name| chr info not in the file name|
-|---|---|---|
-|chr info in the header|gene_atlas_model|gwas_model|
-|chr info absent in the header|gene_atlas_model|gene_atlas_model|
 
 # Before step1:
 
-Please unzip your .gz file first.
+Download the summary statistics files. Please unzip your .gz file first.
 
 # Step1: Unify the data format
-After knowing the data format, users can choose the model (gwas or geneatlas) to unify the data format and filter out SNPs(optional).
+After knowing the data format, users can unify the data format and filter out SNPs(optional).
 :heavy_exclamation_mark: SNPs are extract out by RSID not chromosome position
 
 ## Function: `gprs geneatlas-filter-data`
@@ -82,3 +58,11 @@ if __name__ == '__main__':
 ## output files
 - `*.QC.csv` (QC files )
 - `*.csv` (snplist)
+
+
+
+## Necessary quality control
+
+
+
+
