@@ -8,8 +8,7 @@ This option encodes plink1.9 clump function
 plink --bfile [bfiles] --clump [qc snpslists] --clump-p1  --clump-p2  --clump-r2  --clump-kb  --clump-field  --clump-snp-field  --out 
 ```
 
-The plink_bfiles_dir, qc snpslists and clump_output_dir will automatically be filled in the script.
-Users have to indicate the options below.
+p1 and p2 should be the same.
 
 ## How to use it?
 
@@ -27,7 +26,7 @@ $ gprs clump --plink_bfile_name JA_height_LD --output_name JA_height --clump_kb 
 
 ## output files
 - `*.clumped`
-- ie. `	chr10_JA_height_250_0.0001_0.005.clumped`
+- ie. `chr10_JA_height_250_0.0001_0.005.clumped`
 
 |CHR|F|SNP|BP|P|TOTAL|NSIG|S05|S01|S001|S0001|SP2|
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -58,18 +57,9 @@ $ gprs select-clump-snps --sumstat height --clump_file_name JA_height --output_n
 
 ## output files
 
-- `*.qc_clump_snpslist.csv`
+- `[your_prefix]_clumped_snpslist.csv`
+- ie. `chr10_JA_height_250_0.0001_0.005_clumped_snplist.csv`
+- `[chrnb]_[your_prefix]_[model_parameters].weight`
+- ie. `chr10_JA_height_250_0.0001_0.005.weight`
 
-## With Chromosome information:
 
-|CHR |SNP|Allele|Beta|SE|Pvalue|
-|---|---|---|---|---|---|
-|1 |rs1967017|A|-0.0736|0.0315|0.01938|
-|1 |rs760077|T|-0.1603|0.0543|0.003139|
-
-## Without Chromosome information:
-
-|SNPID|Allele|Beta|SE|Pvalue|
-|---|---|---|---|---|
-|9:98316375:A:G|A|-0.0736|0.0315|0.01938|
-|9:105570921:T:C|T|-0.1603|0.0543|0.003139|
