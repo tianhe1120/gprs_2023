@@ -2,7 +2,7 @@
 
 
 
-## Before step1:
+### Before step1:
 
 Download the summary statistics files. Please unzip your .gz file first.
 
@@ -11,9 +11,10 @@ Download the summary statistics files. Please unzip your .gz file first.
  - To unify the column names.
  - To put columns in desired order.
 
-### Function: `gprs geneatlas-filter-data`
+### Function: `gprs prepare-sumstat`
 
 Filter summary statistics and unify the data format as follows:
+
 SNPID, CHR, POS, Effect_Allele, NonEffect_Allele, Beta, SE, Pvalue, N_eff
 
 ### How to use it?
