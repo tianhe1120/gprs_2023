@@ -191,12 +191,13 @@ Users have to indicate ref and output name only.
   --out                prefix for output plink files
   --symbol             indicate the symbol or text after chrnb in vcf file, default = "." ; i.e. ALL.chr8.vcf.gz, you can put "." or ".vcf.gz" 
   --extra_commands     argument to add for plink 1 make-bed function
+  --merge / --no-merge Whether to keep or skip merging step; use with --no-merge flag if not using LDPred2 model
   --help               Show this message and exit.
 ````
 
 #### Result:
 
-This option will generate three files in `bfiles` folder:
+This option will generate three files for each chromosome in `./result/plink/bfiles` folder:
 
 - `*.bim`
 - `*.bed`
@@ -207,8 +208,7 @@ This option encodes plink1.9 clump function
 ```
 plink --bfile [bfiles] --clump [qc snpslists] --clump-p1  --clump-p2  --clump-r2  --clump-kb  --clump-field  --clump-snp-field  --out 
 ```
-The plink_bfiles_dir, qc snpslists and clump_output_dir will automatically be filled in the script.
-Users have to indicate the options below.
+
 
 #### Options:
  ````
@@ -226,7 +226,7 @@ Users have to indicate the options below.
 
 #### Result:
 
-This option will generate one file in `clump` folder:
+This option will generate files in `./result/clump` folder:
 
 - `*.clumped`
 
@@ -246,10 +246,10 @@ This option will generate one file in `clump` folder:
 ````
 
 #### Result:
-This option will generate files in `../result/plink/clump` folder:
+This option will generate files in `./result/plink/clump` folder:
 - `[your_prefix]_clumped_snpslist.csv`
 
-also makes directories under `../result/plink/ct/` with name of the models
+also makes directories under `./result/plink/ct/` with name of the models
 
 Under each model directory, files are generated for each chromosome:
 - `[chrnb]_[your_prefix]_[model_parameters].weight`
