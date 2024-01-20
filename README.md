@@ -20,7 +20,7 @@ It is designed to deal with GWAS summary statistics in different formats includi
 
 1. Setup virtualenv
 
-The second "venv" is the name of your virtual environment. "venv" should be used to comform the following steps.
+  The second "venv" is the name of your virtual environment. "venv" should be used to comform the following steps.
 
 ```shell
 $ python3 -m venv venv
@@ -34,7 +34,7 @@ $ source ./venv/bin/activate
 
 3. Install this package
 
-"-e" means to install the pipeline in a modifiable mode.
+  "-e" means to install the pipeline in a modifiable mode.
 
 ```shell
 $ pip install -r requirements.txt
@@ -113,6 +113,7 @@ Five folders will automatically generate under the result folder by script.
 - bfile folder: `./result/plink/bfiles`
 - clump folder: `./result/plink/clump`
 - prs folder: `./result/plink/prs`
+- ldpred2 analysis folder: `./result/plink/ldpred2`
 
 
 ### Output file format
@@ -252,6 +253,38 @@ Under each model directory, files are generated for each chromosome:
 - `chrnb_your_prefix_model_parameters.weight`
 
 
+### `gprs beta-list`
+
+#### Options:
+````
+  --
+  --
+  --
+  --
+````
+
+#### Result:
+This option will generate the beta list required for `multiple-prs` function under `./result/prs`:
+- `your_prefix.list`
+
+
+### `gprs multiple-prs`
+
+#### Options:
+````
+  --
+  --
+  --
+  --
+````
+
+#### Result:
+This option will generate a bash script to submit organizing all the models:
+- `build-prs.sh`
+The job will be automatically submitted. User could use `$ myqueue` to monitor the progress.
+`slurm.slurm_name.jobID.out` and `slurm.slurm_name.jobID.err` will be generated to root directory.
+
+
 ### `gprs build-prs`
 This option encodes plink2.0 function
 ```
@@ -279,24 +312,9 @@ This option will generate `.sscore` files in `prs` folder:
 - `*.sscore`
 
 
-### `gprs combine-prs`
-
-Combine-prs option will combine all .sscore files as one .sscore file.
-
-#### Options:
-````
-  --filename          name of .sscore, i.e.  chr10_geneatlas_500_1e-7_0.05.sscore, The file name here is "geneatlas"
-  --clump_kb          distance(kb) parameter for clumping [required]
-  --clump_p1          first set of P-value for clumping [required]
-  --clump_r2          r2 value for clumping, default = 0.1
-  --help              Show this message and exit.
-````
-#### Result:
-This option will generate one file in `prs` folder:
-- `*.sscore`
 
 
-### `gprs prs-statistics`
+### `gprs prs-stats`
 
 After obtained combined sscore file, `prs-statistics` calculate BETA, AIC, AUC, PseudoR2 and OR ratio 
 
