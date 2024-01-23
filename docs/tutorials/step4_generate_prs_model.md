@@ -1,36 +1,65 @@
-# Setp 4-1: Generate PRS model
+# Setp 4-1: Generate beta list
 Generate PRS model by using Dosage by plink2.0
+
+## Function: `gprs beta-list`
+
+This option will generate the beta list required for multiple-prs function under ./result/prs:
+ - `[your_prefix].list`
+
+## How to use it
+
+Shell:
+
+```shell
+$ gprs beta-list --beta_dirs [str] --out [str]
+```
+
+Example input:
+```shell
+$ gprs beta-list --beta_dirs './result/plink/ct' --out JA_height
+```
+
+## Output files
+`[your_prefix].list`
+
+# Step 4-2 Generate prs models
+## Function: `gprs multiple-prs`
+This option will generate a bash script to submit organizing all the models.
+
+## How to use it?
+
+Shell:
+```shell
+$ gprs multiple-prs --vcf_dir [str] --beta_dir_list [str] --slurm_name [str] --slurm_account [str] --slurm_time [str] --memory [int] --symbol [str] --columns [int] --plink_modifier [str] --combine [str] --out [str]
+```
+
+Example input:
+```shell
+$ gprs multiple-prs --vcf_dir ./vcf --beta_dir_list ./result/prs/JA_height.list --slurm_name multiple-prs --plink_modifier 'no-mean-imputation cols=nallele,dosagesum,scoresums' --out JA_height
+```
+## Output files
+`build-prs.sh` The job will be automatically submitted. User could use `$ myqueue` to monitor the progress. `slurm.[slurm_name].[jobID].out` and `slurm.[slurm_name].[jobID].err` will be generated to root directory. Output see gprs build-prs below.
 
 ## Function: `gprs build-prs`
 
 ```
-plink2 --vcf [vcf input] dosage=DS --score [snplists afte clumped and qc]  --out 
+plink2 --vcf [training vcf input] dosage=DS --score [snplists afte clumped and qc]  --out 
 ```
 
-The clumped qc snpslists and prs_output_dir will automatically be filled in the script.
-Users have to indicate the options below.
+
 
 ## How to use it?
 
 Shell:
 
 ```shell
-$ gprs build-prs --vcf_input [str] --qc_clump_snplist_foldername [str] --symbol [str/int] --columns [int] --plink_modifier [str] --memory [int] --clump_kb [int] --clump_p1 [float/scientific notation] --clump_r2 [float] --output_name [output name]
+$ gprs build-prs --vcf_dir [str] --model [str] --beta_dir_list [str] --memory [int] --out [str] --symbol [str/int] --columns [int] --plink_modifier [str] --combine [str]
 ```
 
-Python:
 
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
+Example input see `gprs multiple-prs` above.
 
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
 
-    geneatlas.build_prs( vcf_input= '1000genomes/hg19',
-                          output_name ='2014height', memory='1000',clump_kb='250',
-                    clump_p1='0.02', clump_r2='0.02', qc_clump_snplist_foldername='2014height')
-```
 
 ## output files
 
@@ -44,41 +73,3 @@ if __name__ == '__main__':
 |HG00100 |130     |110     |
 
 
-# Setp 4-2: Combined PRS model
-Combined PRS model (python script create by Soyoung Jeon; update by Ying-Chu Lo))
-
-## Function:`gprs combine-prs`
-
-Combine-prs will combine all .sscore files as one .sscore file.
-And calculate score average and sum per individual.
-
-## How to use it?
-
-Shell:
-
-```shell
-$ gprs combine-prs --ref [str] --result_dur [str] 
-```
-
-Python:
-
-```python
-from gprs.gene_atlas_model import GeneAtlasModel
-
-if __name__ == '__main__':
-    geneatlas = GeneAtlasModel( ref='1000genomes/hg19',
-                    data_dir='data/2014_GWAS_Height' )
-
-    geneatlas.combine_prs(filename="2014height",clump_r2="0.5",clump_kb="250",clump_p1="0.02")
-```
-
-## output files
-
-- `*.sscore`
-
-|id      |ALLELE_CT       |SCORE_AVG       |SCORE_SUM|
-|---|---|---|---|
-|HG03270 |1872.0  |-0.00109666512273       |-2.2826939078|
-|HG03271 |1872.0  |-0.00111419935  |-2.2831272058|
-|NA19670 |1872.0  |-0.00117191923182       |-2.4014961794|
-|HG03279 |1872.0  |-0.00115016386364       |-2.3057819|
