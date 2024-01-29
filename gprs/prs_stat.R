@@ -134,7 +134,7 @@ if(family == 'binary'){
       ssr_full <- sum(resid(lnr)^2)
       ssr_reduced <- sum(resid(lnr_reduced)^2)
       partial_r2_SCORE_STD <- 1 - (ssr_full / ssr_reduced)
-      prs.coef <- summary(lnr)$coeff[c(1),]
+      prs.coef <- summary(lnr)$coeff[c(2),]
       prs.obs_r2<-cor(predict(lnr), as.numeric(prs$PHENO))^2
       stat <- data.frame( Model = model_name, MAX_SNP_CT = ceiling(max(score$TOTAL_ALLELE_CT)/2),
                           P=prs.coef[4], Beta=prs.coef[1], SE=prs.coef[2], R2=prs.obs_r2, Partial_R2 = partial_r2_SCORE_STD, N=length(prs$PHENO) )
