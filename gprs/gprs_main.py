@@ -382,7 +382,7 @@ class GPRS(object):
     def multiple_prs(self, vcf_dir, beta_dir_list,
                 slurm_name, slurm_account='chia657_28', slurm_time='12:00:00', memory=10,
                 symbol='.',
-                columns='1 4 6', plink_modifier='no-mean-imputation cols=nmissallele,dosagesum,scoresums',
+                columns='1 4 6', plink_modifier='no-mean-imputation cols=nallele,dosagesum,scoresums',
                 combine='T', out=''):
         start=time()
         atexit.register(exitlog, start)
@@ -436,7 +436,7 @@ gprs build-prs --vcf_dir {} --model""".format(
 
     def build_prs(self, vcf_dir, model, beta_dir_list, memory, out,
                     symbol='.',
-                    columns='1 4 6', plink_modifier="no-mean-imputation cols=nmissallele,dosagesum,scoresums",
+                    columns='1 4 6', plink_modifier="no-mean-imputation cols=nallele,dosagesum,scoresums",
                     combine='T'):            
         start=time()
         atexit.register(exitlog, start)
@@ -473,7 +473,7 @@ gprs build-prs --vcf_dir {} --model""".format(
                         if os.path.exists('{}/{}/{}_{}.sscore'.format(out, model, chrnb, model)):
                             print("{}_{}.sscore saved in {}/{}".format(chrnb, model, out, model))
                             file = pd.read_csv('{}/{}/{}_{}.sscore'.format(out, model, chrnb, model), sep='\t')
-                            file.rename(columns={'SCORE1_SUM':'SCORE_{}'.format(chrnb), 'NMISS_ALLELE_CT':'ALLELE_CT_{}'.format(chrnb)}, inplace=True)
+                            file.rename(columns={'SCORE1_SUM':'SCORE_{}'.format(chrnb), 'ALLELE_CT':'ALLELE_CT_{}'.format(chrnb)}, inplace=True)
                             if len(all) == 0:
                                 all=all.merge(file[['#IID','SCORE_{}'.format(chrnb), 'ALLELE_CT_{}'.format(chrnb)]], how='right')
                             else:
