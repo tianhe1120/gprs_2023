@@ -10,6 +10,7 @@ from collections import defaultdict
 import pandas as pd
 from sklearn.utils import column_or_1d
 from gprs.timer import *
+import csv
 
 class GPRS(object):
     def __init__(self,
@@ -382,7 +383,7 @@ class GPRS(object):
     def multiple_prs(self, vcf_dir, beta_dir_list,
                 slurm_name, slurm_account='chia657_28', slurm_time='12:00:00', memory=10,
                 symbol='.',
-                columns='1 4 6', plink_modifier='no-mean-imputation cols=nallele,dosagesum,scoresums',
+                columns='1 4 6', plink_modifier='no-mean-imputation list-variants cols=nallele,dosagesum,scoresums',
                 combine='T', out=''):
         start=time()
         atexit.register(exitlog, start)
@@ -488,6 +489,57 @@ gprs build-prs --vcf_dir {} --model""".format(
             all = all.assign( SCORE_STD = (all.SCORE_SUM-all.SCORE_SUM.mean())/all.SCORE_SUM.std() )
             all[['#IID', 'SCORE_SUM', 'SCORE_STD','TOTAL_ALLELE_CT']].to_csv('{}/{}.sscore'.format(out, model), index=False, sep='\t')
             print('Done! Combined score for "{}" model saved'.format(model))
+        
+        # generage coverage log
+        def concatenate_and_count_vars(subdirectory):
+            concatenated_file_path = os.path.join(out, subdirectory, f"{subdirectory}.vars")
+            total_lines = 0
+            with open(concatenated_file_path, 'w') as outfile:
+                for file_name in os.listdir(os.path.join(out, subdirectory)):
+                    if file_name.endswith('.vars') and file_name.startswith('chr'):
+                        print(file_name)
+                        with open(os.path.join(out, subdirectory, file_name), 'r') as infile:
+                            lines = infile.readlines()
+                            total_lines += len(lines)
+                            outfile.writelines(lines)
+            return total_lines
+            
+        model_chr_dir = beta_list[model]
+        path_parts = model_chr_dir.split(os.sep)
+        model_dir = '/' + os.path.join(*path_parts[:-2])
+        print(model_dir)
+        vcf_parts = vcf_dir.split(os.sep)
+        
+        
+        def count_txt_lines(subdirectory):
+            txt_file_path = os.path.join(model_dir, f"{subdirectory}.txt")
+            with open(txt_file_path, 'r') as file:
+                lines = file.readlines()
+            return len(lines) - 1  # Excluding header
+            
+        results = []
+        # Check every subdirectory in the PRS directory
+        for subdirectory in os.listdir(out):
+            if os.path.isdir(os.path.join(out, subdirectory)):
+                # Concatenate .vars files and count the lines
+                vars_line_count = concatenate_and_count_vars(subdirectory)
+            
+                # Check if corresponding .txt file exists and count its lines (excluding header)
+                if os.path.exists(os.path.join(model_dir, f"{subdirectory}.txt")):
+                    txt_line_count = count_txt_lines(subdirectory)
+                    percentage = vars_line_count / txt_line_count * 100
+                else:
+                    txt_line_count = 'File not found'
+                    percentage = 'N/A'
+            
+                # Store results
+                results.append([subdirectory, vars_line_count, txt_line_count, percentage])
+    
+        # Write the results to a CSV file
+        with open(vcf_parts[-2] + '_' + path_parts[-3] + '_model_coverage.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Model', 'Variants used', 'Variants in model', 'Percentage'])
+            writer.writerows(results)
 
     # Calculate the PRS statistical results and output the statistics summary
     def prs_stat(self, score, pheno, data, model, binary, pop_prev, plotroc, r):
