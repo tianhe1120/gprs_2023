@@ -175,7 +175,7 @@ def beta_list(beta_dirs, out):
 @click.option( '--memory', metavar='<int>',default=10, help='slurm job memory in GB; default="10" ')
 @click.option( '--symbol', metavar='<str>', default='.', help='symbol or text after chrnb in vcf file, default = "." ; i.e. ALL.chr8.vcf.gz, you can put "." or ".vcf.gz"')
 @click.option( '--columns', metavar='<int>', default='1 4 6', help='a column index indicate the [SNPID] [ALLELE] [BETA] position; column nb starts from 1; default="1 4 6"' )
-@click.option( '--plink_modifier', metavar='<str>', default="'no-mean-imputation' 'cols='nmissallele,dosagesum,scoresums", help='plink2 modifier for score function')
+@click.option( '--plink_modifier', metavar='<str>', default="'no-mean-imputation' 'list-variants' 'cols='nallele,dosagesum,scoresums", help='plink2 modifier for score function')
 @click.option( '--combine', metavar='<str>',  default='T', help='whether to combine scores per chromosomes to generate a final genome-wide PRS (T/F); default="T" ')
 @click.option( '--out', metavar='<str>', required=True, default='', help='directory name to output PRS')
 def multiple_prs(vcf_dir, beta_dir_list, slurm_name, slurm_account, slurm_time, memory, symbol, columns, plink_modifier, combine, out):
@@ -200,7 +200,7 @@ def multiple_prs(vcf_dir, beta_dir_list, slurm_name, slurm_account, slurm_time, 
 @click.option( '--out', metavar='<str>', required=True, default='', help='directory name to output PRS')
 @click.option( '--symbol', metavar='<str/int>', required=True,default='.', help='indicate the symbol or text after chrnb in vcf file, default = "." ; i.e. ALL.chr8.vcf.gz, you can put "." or ".vcf.gz"' )
 @click.option( '--columns', metavar='<int>', default='1 2 3', help='a column index indicate the [SNPID] [ALLELE] [BETA] position; column nb starts from 1 ' )
-@click.option( '--plink_modifier', metavar='<str>', default='no-mean-imputation', help='no-mean-imputation as default in here, get more info by searching plink2.0 modifier ' )
+@click.option( '--plink_modifier', metavar='<str>', default="'no-mean-imputation' 'list-variants' 'cols='nallele,dosagesum,scoresums", help='no-mean-imputation as default in here, get more info by searching plink2.0 modifier ' )
 @click.option( '--combine', metavar='<str>', required=True, default='T', help='whether to combine scores per chromosomes to generate a final genome-wide PRS (T/F); default="T" ')
 def build_prs(vcf_dir, model, beta_dir_list, memory, out, symbol, columns, plink_modifier, combine):
     gprs = GPRS()
