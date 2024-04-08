@@ -46,6 +46,8 @@ suppressMessages(options(bigstatsr.check.parallel.blas = FALSE))
 suppressMessages(options(default.nproc.blas = NULL))
 suppressMessages(library(data.table))
 suppressMessages(library(magrittr))
+suppressMessages(library(foreach))
+suppressMessages(library(rngtools))
 
 #Evaluation
 suppressMessages(library(fmsb))
@@ -56,7 +58,7 @@ bigassertr::assert_dir(opt$LDmatrix)
 tmp <- tempfile(tmpdir = "tmp-data")
 on.exit(file.remove(paste0(tmp, ".sbk")), add = TRUE)
 
-info <- readRDS("./tmp-data/map_hm3_ldpred2.rds")
+info <- readRDS(runonce::download_file("https://ndownloader.figshare.com/files/25503788", fname = "map_hm3_ldpred2.rds"))
 NCORES <- nb_cores() #as.integer(Sys.getenv("SLURM_JOB_CPUS_PER_NODE"))?
 
 #############
@@ -72,11 +74,12 @@ for (chrnb in 1:22){
   cat(paste0('Processing chr',chrnb,'\n'))
   names(sumstat) <- c("snpid","chr","pos","a1","a0","beta","beta_se","p","n_eff")
   cat(paste0(nrow(sumstat),' SNPs in file... '))
-  sumstat <- sumstat[sumstat$pos %in% info$pos, ]
+  sumstat <- sumstat[sumstat$pos %in% info$pos_hg38, ]
   cat(paste0(nrow(sumstat),' SNPs in hapmap3\n')) 
   sumstats <- rbindlist( list(sumstats, sumstat))
 }
 cat(paste0(nrow(sumstats),' SNPs in total... \n\n'))
+
 
 
 
@@ -212,24 +215,25 @@ cat('\n\n')
 #############
 # 5.1 LDPred-Inf
 #############
-cat(dline)
-cat('Running LDPred2 Analysis','\n')
-cat('Infinitestimal model..\n')
-beta_inf <- snp_ldpred2_inf(corr, info_snp, h2 = h2_est)
+# cat(dline)
+# cat('Running LDPred2 Analysis','\n')
+# cat('Infinitestimal model..\n')
+# beta_inf <- snp_ldpred2_inf(corr, info_snp, h2 = h2_est)
+# This is one value required by ldpred2-auto calculation
 ind.test <- 1:nrow(G)
-cat('Done!\n\n')
+# cat('Done!\n\n')
 
 #############
 # 5.2 LDPred-grid
 #############
 cat('Grid model..\n')
-p_seq <- signif(seq_log(1e-4, 1, length.out = 17), 2)
+p_seq <- signif(seq_log(0.01, 1, length.out = 10), 2)
 h2_seq <- round(h2_est * c(0.7, 1, 1.4), 4)
 grid.param <-
   expand.grid(p = p_seq,
               h2 = h2_seq,
               sparse = c(FALSE, TRUE))
-beta_grid <- snp_ldpred2_grid(corr, info_snp, grid.param)
+beta_grid <- snp_ldpred2_grid(corr, info_snp, grid.param, ncores = NCORES)
 
 
 beta_grid_nosp <- data.table(beta_grid[,grid.param$sparse==F])
@@ -241,25 +245,26 @@ cat('Done!\n\n')
 #############
 # 5.3 LDPred-auto
 #############
-cat('Auto model\n')
-multi_auto <- snp_ldpred2_auto(corr, info_snp, h2_init = h2_est,
-                               vec_p_init = seq_log(1e-4, 0.9, length.out = NCORES),
-                               ncores = NCORES)
-beta_auto <- sapply(multi_auto, function(auto) auto$beta_est)
-pred_auto <- big_prodMat(G, beta_auto, ind.row = ind.test, ind.col = info_snp$`_NUM_ID_`)
+# cat('Auto model\n')
+# multi_auto <- snp_ldpred2_auto(corr, info_snp, h2_init = h2_est,
+#                                vec_p_init = seq_log(1e-4, 0.9, length.out = NCORES),
+#                                ncores = NCORES, verbose = F, use_MLE = F)
+# beta_auto <- sapply(multi_auto, function(auto) auto$beta_est)
+# pred_auto <- big_prodMat(G, beta_auto, ind.row = ind.test, ind.col = info_snp$`_NUM_ID_`)
 
 
 #filter out bad chains by comparing scale of resulting predictions(calculating sd and keeping ones without too much divergence)
-sc <- apply(pred_auto, 2, sd)
-keep <- abs(sc - median(sc)) < 3 * mad(sc)
-#get mean of filtered predictions -> final prediction
-final_beta_auto <- rowMeans(beta_auto[, keep])
-cat('Done!\n')
+# sc <- apply(pred_auto, 2, sd)
+# keep <- abs(sc - median(sc)) < 3 * mad(sc)
+# get mean of filtered predictions -> final prediction
+# final_beta_auto <- rowMeans(beta_auto[, keep])
+# cat('Done!\n')
 
 
 ### write out Beta
 cat('\n\nOutputting Betas..\n')
-betas <- data.table(SNPID=info_snp$rsid, CHR=info_snp$chr, POS=info_snp$pos, A1=info_snp$a1, A2=info_snp$a0, beta_inf, beta_grid_nosp, beta_grid_sp, beta_auto=final_beta_auto)
+betas <- data.table(SNPID=info_snp$rsid, CHR=info_snp$chr, POS=info_snp$pos, A1=info_snp$a1, A2=info_snp$a0, beta_grid_nosp, beta_grid_sp)
+# betas <- data.table(SNPID=info_snp$rsid, CHR=info_snp$chr, POS=info_snp$pos, A1=info_snp$a1, A2=info_snp$a0, beta_grid_nosp, beta_grid_sp, beta_auto=final_beta_auto)
 names(betas)[-1:-5]<-paste0('LDPred2_',names(betas)[-1:-5])
 
 rem<-NULL
@@ -267,7 +272,8 @@ for(i in 6:length(names(betas))){
     #infinite/NA beta 있는 parameter는 스킵, index저장
     if(is.infinite(sum(betas[[names(betas)[i]]])) | is.na(sum(betas[[names(betas)[i]]]))){
         cat ('Skipping',names(betas)[i],'due to presence of infinite/null values.\n')
-        rem<-c(rem,i)
+        
+        # rem<-c(rem,i)
       } else {
       system(paste0('mkdir -p ',opt$output,'/',names(betas)[i]))
       for (chr in 1:22){
