@@ -5,10 +5,13 @@ suppressMessages(library(pROC))
 suppressMessages(library(DescTools))
 
 
-# Rejecting implausible pseudo R2 estimates
-# Without stratified ORs (simplified)
+####################################
+# Please note that this version contains:
+# Without stratified ORs, eg. top 5% vs. middle 20% (simplified)
 # 95% bootstrap CI, stratified by cases/controls
+# Rejecting implausible pseudo R2 estimates for each iteration
 # liability R2 predictor from observed R2 to partial R2
+#############################################################
 
 # options
 args <- commandArgs(TRUE)
