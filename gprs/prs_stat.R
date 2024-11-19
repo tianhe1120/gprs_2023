@@ -1,8 +1,14 @@
 #!/usr/bin/Rscript
-#created by - Soyoung Jeon
+#created by - Soyoung Jeon; modified by - He Tian
 suppressWarnings(library(tidyverse))
 suppressMessages(library(pROC))
 suppressMessages(library(DescTools))
+
+
+# Rejecting implausible pseudo R2 estimates
+# Without stratified ORs (simplified)
+# 95% bootstrap CI, stratified by cases/controls
+# liability R2 predictor from observed R2 to partial R2
 
 # options
 args <- commandArgs(TRUE)
@@ -45,7 +51,7 @@ h2l_R2 <- function(k, r2, p) {
 # Read in prs
 ###########
 score <- read.table(scoref)
-names(score) <- c("ID","SCORE_SUM","SCORE_STD","TOTAL_ALLELE_CT")
+names(score) <- c("ID","SCORE_STD","SCORE_STD","TOTAL_ALLELE_CT")
 
 
 ###########
@@ -84,62 +90,200 @@ prs <- inner_join(score[,c(1,3)], pheno, by="ID")
 
 if(family == 'binary'){
     prs$PHENO<-factor(prs$PHENO, labels=c('CONTROL','CASE'))
+    
     logit <- glm(PHENO~., data=prs[,-c(1)], family="binomial")
     prs.coef <- summary(logit)$coeff["SCORE_STD",]
     prs.pseudor2 <- as.numeric(PseudoR2(logit,which="Nagelkerke"))
+    logit_reduced <- glm(PHENO~., data=prs[,-c(1, 2)], family="binomial")
+    prs.pseudor2_reduced <- as.numeric(PseudoR2(logit_reduced,which="Nagelkerke"))
+    prs.partialr2 <- prs.pseudor2 - prs.pseudor2_reduced
     prs.obs_r2<-cor(predict(logit), as.numeric(prs$PHENO))^2
-    prs.leesr2 <- h2l_R2(pop_prev, prs.obs_r2, sum(prs$PHENO== 'CASE')/length(prs$PHENO))
+    prs.leesr2 <- h2l_R2(pop_prev, prs.partialr2, sum(prs$PHENO== 'CASE')/length(prs$PHENO))
     myroc <-roc(prs$PHENO, prs$SCORE_STD, auc=TRUE, quiet=TRUE)
+    
+    calc_stats <- function(data) {
+    # Fit full model
+    logit <- glm(PHENO ~ ., data = data[,-c(1)], family = "binomial")
+    prs.coef <- summary(logit)$coeff["SCORE_STD",]
+    
+    # Calculate pseudo R2 and partial R2
+    prs.pseudor2 <- as.numeric(PseudoR2(logit, which = "Nagelkerke"))
+    logit_reduced <- glm(PHENO ~ ., data = data[,-c(1, 2)], family = "binomial")
+    prs.pseudor2_reduced <- as.numeric(PseudoR2(logit_reduced, which = "Nagelkerke"))
+    prs.partialr2 <- prs.pseudor2 - prs.pseudor2_reduced
+    
+    # Check conditions
+    if (prs.pseudor2 < 0 || prs.pseudor2 > 1 || prs.pseudor2_reduced < 0 || prs.pseudor2_reduced > 1) {
+      return(NULL)  # Return NULL if conditions are violated
+    }
+    
+    # Calculate additional statistics
+    prs.obs_r2 <- cor(predict(logit), as.numeric(data$PHENO))^2
+    prs.leesr2 <- h2l_R2(pop_prev, prs.partialr2, sum(data$PHENO == 'CASE') / length(data$PHENO))
+    
+    return(c(prs.coef[1], prs.coef[2], prs.pseudor2, prs.partialr2, prs.obs_r2, prs.leesr2))
+  }
+  
+    # Custom function to perform stratified sampling with conditional checks
+    custom_boot <- function(data, R) {
+    results <- list()  # Store results
+    count <- 0         # Track successful iterations
+    
+    while (count < R) {
+      # Perform stratified sampling based on PHENO levels
+      indices_case <- sample(which(data$PHENO == "CASE"), replace = TRUE)
+      indices_control <- sample(which(data$PHENO == "CONTROL"), replace = TRUE)
+      indices <- c(indices_case, indices_control)
+      
+      # Extract the stratified sample
+      d <- data[indices, ]
+      
+      # Calculate statistics and apply conditions
+      stats <- calc_stats(d)
+      if (!is.null(stats)) {  # If valid, add to results
+        count <- count + 1
+        results[[count]] <- stats
+      }
+    }
+    
+    # Convert list to data frame for analysis
+    results_df <- do.call(rbind, results)
+    colnames(results_df) <- c("Coef Estimate", "Std Error", "Pseudo R2", "Partial R2", "Observed R2", "Lees R2")
+    
+    return(results_df)
+  }
+  
+  # Run the custom bootstrap function to get exactly 1000 successful iterations
+  set.seed(123)
+  R <- 1000
+  boot_results <- custom_boot(data = prs, R = R)
+  
+  ci <- apply(boot_results, 2, quantile, probs = c(0.025, 0.975))
+  
     if(plotroc == 'plotroc'){
       pdf(paste0(output_name,".pdf"))
       plot.roc(myroc,auc.polygon=TRUE, print.auc=TRUE)
       dev.off()
       cat(paste0('ROC plot with AUC saved: ',output_name,'.pdf\n\n'))
     }
-    # OR by decile
-    prs$decile <- ntile(prs$SCORE_STD,100)
-    prs$decile[prs$decile %in% c(40:60)] <- "middle_20"
-    prs$decile[prs$decile == 100] <- "top_1"
-    prs$decile[prs$decile  %in% c(99:100)] <- "top_2"
-    prs$decile[prs$decile %in% c(96:100)] <- "top_5"
-    prs$decile[prs$decile %in% c(91:100)] <- "top_10"
     
-    user1 = filter(prs, prs$decile %in% c("top_1", "middle_20"))
-    user2 = filter(prs, prs$decile %in% c("top_2","middle_20"))
-    user3 = filter(prs, prs$decile %in% c("top_5","middle_20"))
-    user4 = filter(prs, prs$decile %in% c("top_10","middle_20"))
     
-    cat('Contingency table per deciles: \n')
-    print(cont.table1 <- table(user1$decile,user1$PHENO))
-    print(cont.table2 <- table(user2$decile,user2$PHENO))
-    print(cont.table3 <- table(user3$decile,user3$PHENO))
-    print(cont.table4 <- table(user4$decile,user4$PHENO))
     
-    OR1<-OddsRatio(cont.table1)
-    OR2<-OddsRatio(cont.table2)
-    OR3<-OddsRatio(cont.table3)
-    OR4<-OddsRatio(cont.table4)
+    cat("nrow(prs): ", nrow(prs), "length(prs$Pheno):", length(prs$PHENO), ". /n")
+    
+
+
+    
+    ci_prs_coef_lower <- ci["2.5%", "Coef Estimate"]
+    ci_prs_coef_upper <- ci["97.5%", "Coef Estimate"]
+    ci_prs_se_lower <- ci["2.5%", "Std Error"]
+    ci_prs_se_upper <- ci["97.5%", "Std Error"]
+    ci_prs_pseudor2_lower <- ci["2.5%", "Pseudo R2"]
+    ci_prs_pseudor2_upper <- ci["97.5%", "Pseudo R2"]
+    ci_prs_partialr2_lower <- ci["2.5%", "Partial R2"]
+    ci_prs_partialr2_upper <- ci["97.5%", "Partial R2"]
+    ci_prs_obs_r2_lower <- ci["2.5%", "Observed R2"]
+    ci_prs_obs_r2_upper <- ci["97.5%", "Observed R2"]
+    ci_prs_leesr2_lower <- ci["2.5%", "Lees R2"]
+    ci_prs_leesr2_upper <- ci["97.5%", "Lees R2"]
+
+    
+    
     
     # result dataframe
-    stat <- data.frame( Model = model_name, MAX_SNP_CT = ceiling(max(score$TOTAL_ALLELE_CT)/2), 
-                P=prs.coef[4], Beta=prs.coef[1], SE=prs.coef[2], OR=exp(prs.coef[1]), 
-                AUC=myroc$auc, PseudoR2=prs.pseudor2, LiabilityR2=prs.leesr2,
-		            N=length(prs$PHENO), N_cas=sum(prs$PHENO=='CASE'), N_ctrl=sum(prs$PHENO=='CONTROL'),  
-                OR_top1_to_middle20=OR1,OR_top2_to_middle20=OR2,OR_top5_to_middle20=OR3,OR_top10_to_middle20=OR4)
-
+    stat <- data.frame(
+      Model = model_name,
+      MAX_SNP_CT = ceiling(max(score$TOTAL_ALLELE_CT) / 2),
+      P = prs.coef[4],
+      Beta = prs.coef[1],
+      Beta_lower = ci_prs_coef_lower,
+      Beta_upper = ci_prs_coef_upper,
+      SE = prs.coef[2],
+      SE_lower = ci_prs_se_lower,
+      SE_upper = ci_prs_se_upper,
+      OR = exp(prs.coef[1]),
+      OR_lower = exp(ci_prs_coef_lower),
+      OR_upper = exp(ci_prs_coef_upper),
+      AUC = myroc$auc,
+      PseudoR2 = prs.pseudor2,
+      PseudoR2_lower = ci_prs_pseudor2_lower,
+      PseudoR2_upper = ci_prs_pseudor2_upper,
+      PartialR2=prs.partialr2, 
+      PartialR2_lower = ci_prs_partialr2_lower,
+      PartialR2_upper = ci_prs_partialr2_upper,
+      R2 = prs.obs_r2,
+      R2_lower = ci_prs_obs_r2_lower,
+      R2_upper = ci_prs_obs_r2_upper,
+      LiabilityR2 = prs.leesr2,
+      LiabilityR2_lower = ci_prs_leesr2_lower,
+      LiabilityR2_upper = ci_prs_leesr2_upper,
+      N = length(prs$PHENO),
+      N_cas = sum(prs$PHENO == 'CASE'),
+      N_ctrl = sum(prs$PHENO == 'CONTROL')
+    )
     
     } else {
       lnr <- glm(PHENO~., data=prs[,-c(1)], family="gaussian")
       lnr_reduced <- glm(PHENO ~ ., data = prs[,-c(1, 2)], family = "gaussian")
       ssr_full <- sum(resid(lnr)^2)
       ssr_reduced <- sum(resid(lnr_reduced)^2)
-      partial_r2_SCORE_STD <- 1 - (ssr_full / ssr_reduced)
+      partial_r2 <- 1 - (ssr_full / ssr_reduced)
       prs.coef <- summary(lnr)$coeff[c(2),]
       prs.obs_r2<-cor(predict(lnr), as.numeric(prs$PHENO))^2
-      stat <- data.frame( Model = model_name, MAX_SNP_CT = ceiling(max(score$TOTAL_ALLELE_CT)/2),
-                          P=prs.coef[4], Beta=prs.coef[1], SE=prs.coef[2], R2=prs.obs_r2, Partial_R2 = partial_r2_SCORE_STD, N=length(prs$PHENO) )
+      
+      calc_stats <- function(data, indices) {
+        d <- data[indices, ]
+        lnr <- glm(PHENO~., data=d[,-c(1)], family="gaussian")
+        lnr_reduced <- glm(PHENO ~ ., data = d[,-c(1, 2)], family = "gaussian")
+        ssr_full <- sum(resid(lnr)^2)
+        ssr_reduced <- sum(resid(lnr_reduced)^2)
+        partial_r2 <- 1 - (ssr_full / ssr_reduced)
+        prs.coef <- summary(lnr)$coeff[c(2),]
+        prs.obs_r2<-cor(predict(lnr), as.numeric(d$PHENO))^2
+        
+      
+        return(c(prs.coef[1], prs.coef[2], prs.coef[4], prs.obs_r2, partial_r2))
+      }
+      
+      set.seed(123)
+    
+      boot_results <- boot(data = prs, statistic = calc_stats, R = 1000)
+    
+      ci_prs_coef <- boot.ci(boot_results, type = "perc", index = 1) # Beta
+      ci_prs_se <- boot.ci(boot_results, type = "perc", index = 2) # SE
+      ci_prs_p <- boot.ci(boot_results, type = "perc", index = 3) # P
+      ci_prs_obs_r2 <- boot.ci(boot_results, type = "perc", index = 4) # Observed R2
+      ci_prs_partial_r2 <- boot.ci(boot_results, type = "perc", index = 5) # Partial R2
+    
+      ci_prs_coef_lower <- ci_prs_coef$perc[4]
+      ci_prs_coef_upper <- ci_prs_coef$perc[5]
+      ci_prs_se_lower <- ci_prs_se$perc[4]
+      ci_prs_se_upper <- ci_prs_se$perc[5]
+      ci_prs_obs_r2_lower <- ci_prs_obs_r2$perc[4]
+      ci_prs_obs_r2_upper <- ci_prs_obs_r2$perc[5]
+      ci_prs_partial_lower <- ci_prs_partial_r2$perc[4]
+      ci_prs_partial_upper <- ci_prs_partial_r2$perc[5]
+    
+    
+      stat <- data.frame(Model = model_name,
+      P = prs.coef[4],
+      Beta = prs.coef[1],
+      Beta_lower = ci_prs_coef_lower,
+      Beta_upper = ci_prs_coef_upper,
+      SE = prs.coef[2],
+      SE_lower = ci_prs_se_lower,
+      SE_upper = ci_prs_se_upper,
+      R2 = prs.obs_r2,
+      R2_lower = ci_prs_obs_r2_lower,
+      R2_upper = ci_prs_obs_r2_upper,
+      Partial_R2 = partial_r2,
+      Partial_R2_lower = ci_prs_partial_lower,
+      Partial_R2_upper = ci_prs_partial_upper,
+      N = length(prs$PHENO)
+      )
 }
 
 write.table( format(stat, digits=3), paste0(output_name, ".stat"), row.names = F, quote = F, sep=" ")
 cat("\n")
+cat(paste0("Statistics calculation is done. Results saved as ",output_name,".stat \n"))
 cat(paste0("Statistics calculation is done. Results saved as ",output_name,".stat \n"))
