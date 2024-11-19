@@ -11,6 +11,7 @@ suppressMessages(library(DescTools))
 # 95% bootstrap CI, stratified by cases/controls
 # Rejecting implausible pseudo R2 estimates for each iteration
 # liability R2 predictor from observed R2 to partial R2
+# R2 on the liability scale does not depend on the proportion of cases in the sample but does require an estimate of the lifetime population prevalence of the disease. - Md. Moksedul Momin, Soohyun Lee, Naomi R. Wray, S. Hong Lee, Significance tests for R2 of out-of-sample prediction using polygenic scores, The American Journal of Human Genetics, Volume 110, Issue 2, 2023, Pages 349-358, ISSN 0002-9297, https://doi.org/10.1016/j.ajhg.2023.01.004.
 #############################################################
 
 # options
