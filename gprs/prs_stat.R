@@ -105,6 +105,13 @@ if(family == 'binary'){
     prs.obs_r2<-cor(predict(logit), as.numeric(prs$PHENO))^2
     prs.leesr2 <- h2l_R2(pop_prev, prs.partialr2, sum(prs$PHENO== 'CASE')/length(prs$PHENO))
     myroc <-roc(prs$PHENO, prs$SCORE_STD, auc=TRUE, quiet=TRUE)
+    pred_full <- predict(logit, type = "response")
+    pred_reduced <- predict(logit_reduced, type = "response")
+    roc_full <- roc(prs$PHENO, pred_full, auc = TRUE, quiet = TRUE)
+    roc_reduced <- roc(prs$PHENO, pred_reduced, auc = TRUE, quiet = TRUE)
+    auc_full <- auc(roc_full)
+    auc_reduced <- auc(roc_reduced)
+    delta_auc <- auc_full - auc_reduced
     
     calc_stats <- function(data) {
     # Fit full model
@@ -219,6 +226,7 @@ if(family == 'binary'){
       R2 = prs.obs_r2,
       R2_lower = ci_prs_obs_r2_lower,
       R2_upper = ci_prs_obs_r2_upper,
+      Delta_AUC = delta_auc,
       LiabilityR2 = prs.leesr2,
       LiabilityR2_lower = ci_prs_leesr2_lower,
       LiabilityR2_upper = ci_prs_leesr2_upper,
