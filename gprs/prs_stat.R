@@ -3,6 +3,7 @@
 suppressWarnings(library(tidyverse))
 suppressMessages(library(pROC))
 suppressMessages(library(DescTools))
+suppressMessages(library(boot))
 
 
 ####################################
